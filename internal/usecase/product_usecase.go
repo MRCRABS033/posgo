@@ -13,8 +13,7 @@ func NewProductUseCase(repo domain.ProductRepository) *ProductUseCase {
 	return &ProductUseCase{repo: repo}
 }
 
-// get a product
-func (uc *ProductUseCase) GetByCode(code string) (*domain.Product, error) {
+func (uc *ProductUseCase) GetProductByCode(code string) (*domain.Product, error) {
 	if code == "" {
 		return nil, errors.New("Por favor ingrese un codigo.")
 	}
@@ -32,12 +31,29 @@ func (uc *ProductUseCase) GetByCode(code string) (*domain.Product, error) {
 	return product, nil
 }
 
+func (uc *ProductUseCase) GetProductByName(name string) (*domain.Product, error) {
+	if name == "" {
+		return nil, errors.New("Por favor ingrese un nombre.")
+	}
+
+	product, err := uc.repo.GetProductByName(name)
+
+	if err != nil {
+		return nil, err
+	}
+	if product == nil {
+		return nil, errors.New("Producto no encontrado")
+	}
+
+	return product, nil
+}
+
 func (uc *ProductUseCase) GetProductLowStock() ([]*domain.Product, error) {
 	products, err := uc.repo.GetProductLowStock()
 	if err != nil {
 		return nil, err
 	}
-	if products != nil {
+	if len(products) == 0 {
 		return nil, errors.New("Sin productos con bajo stock")
 	}
 
@@ -50,14 +66,15 @@ func (uc *ProductUseCase) GetProducByDepartment(department string) ([]*domain.Pr
 	if err != nil {
 		return nil, err
 	}
-	if products != nil {
+	if len(products) == 0 {
 		return nil, errors.New("No se econtraron productos en este departamento.")
 	}
 
 	return products, nil
 }
 
-// create a new product
+//---------------------------------------------------------------
+
 func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice float64, stock int, department *domain.Department) (*domain.Product, error) {
 
 	if sellPrice < costPrice {
@@ -102,7 +119,12 @@ func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice 
 func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, discount float64, isSingleProduct, availableDiscount bool, stock int, available bool, department *domain.Department) error {
 
 	existingProduct, err := uc.repo.GetProductByCode(code)
+
 	if err != nil {
+		return err
+	}
+
+	if existingProduct == nil {
 		return errors.New("El producto que intentas modificar no existe.")
 	}
 
@@ -121,4 +143,16 @@ func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, d
 	existingProduct.Department = *department
 
 	return uc.repo.UpdateProduct(existingProduct)
+}
+
+func (uc *ProductUseCase) RemoveProduct(code string) error {
+	existProduct, err := uc.repo.GetProductByCode(code)
+	if err != nil {
+		return err
+	}
+	if existProduct == nil {
+		return errors.New("el producto que intentas borrar no existe.")
+	}
+
+	return uc.repo.RemoveProduct(existProduct.Code)
 }

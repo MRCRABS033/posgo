@@ -1,6 +1,7 @@
 package domain
 
 type Permission struct {
+	UserID                       int
 	CreateProduct                bool
 	DeleteProduct                bool
 	ModifiedUnitCostPriceProduct bool
