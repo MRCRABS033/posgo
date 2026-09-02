@@ -75,16 +75,12 @@ func (uc *ProductUseCase) GetProducByDepartment(department string) ([]*domain.Pr
 
 //---------------------------------------------------------------
 
-func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice float64, stock int, department *domain.Department) (*domain.Product, error) {
-
-	if sellPrice < costPrice {
-		return nil, errors.New("el precio de venta no puede ser menor que el costo.")
-	}
+func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice float64, stock float64, department *domain.Department) (*domain.Product, error) {
 
 	productExist, err := uc.repo.GetProductByCode(code)
 
 	if productExist != nil {
-		return nil, errors.New("ya existe un producto registrado con ese codigo.")
+		return nil, errors.New("Ya existe un producto registrado con este codigo.")
 	}
 
 	if department == nil {
@@ -104,7 +100,11 @@ func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice 
 		AvailableDiscount: false,
 		Stock:             stock,
 		Available:         true,
-		Department:        *department,
+		Department:        department,
+	}
+
+	if err := product.Validate(); err != nil {
+		return nil, err
 	}
 
 	err = uc.repo.CreateProduct(product)
@@ -116,7 +116,7 @@ func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice 
 	return product, nil
 }
 
-func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, discount float64, isSingleProduct, availableDiscount bool, stock int, available bool, department *domain.Department) error {
+func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, discount float64, isSingleProduct, availableDiscount bool, stock float64, available bool, department *domain.Department) error {
 
 	existingProduct, err := uc.repo.GetProductByCode(code)
 
@@ -128,10 +128,6 @@ func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, d
 		return errors.New("El producto que intentas modificar no existe.")
 	}
 
-	if unitSell < unitCost {
-		return errors.New("el precio de venta no puede ser menor que el costo.")
-	}
-
 	existingProduct.Name = name
 	existingProduct.UnitCostPrice = unitCost
 	existingProduct.UnitSellPrice = unitSell
@@ -140,9 +136,14 @@ func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, d
 	existingProduct.AvailableDiscount = availableDiscount
 	existingProduct.Available = available
 	existingProduct.Stock = stock
-	existingProduct.Department = *department
+	existingProduct.Department = department
+
+	if err := existingProduct.Validate(); err != nil {
+		return err
+	}
 
 	return uc.repo.UpdateProduct(existingProduct)
+
 }
 
 func (uc *ProductUseCase) RemoveProduct(code string) error {

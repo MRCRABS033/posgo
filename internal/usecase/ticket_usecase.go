@@ -14,15 +14,21 @@ func NewTicketUseCase(repo domain.TicketRepository) *TicketUseCase {
 	return &TicketUseCase{repo: repo}
 }
 
-func (uc *TicketUseCase) CreateTicket(ticket *domain.Ticket) error {
-	if ticket == nil {
-		return errors.New("Por favor ingrese un ticket válido.")
+func (uc *TicketUseCase) CreateTicket(ticket *domain.Ticket) (*domain.Ticket, error) {
+
+	if err := ticket.ValidateForCreation(); err != nil {
+		return nil, err
 	}
 
-	if err := uc.repo.CreateTicket(ticket); err != nil {
-		return err
+	newTicket, err := uc.repo.CreateTicket(ticket)
+
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	if newTicket == nil {
+		return nil, errors.New("no se pudo generar el ticket en la base de datos")
+	}
+	return newTicket, nil
 }
 
 func (uc *TicketUseCase) GetTicketByID(ticketID int) (*domain.Ticket, error) {
@@ -97,14 +103,25 @@ func (uc *TicketUseCase) GetAllCurrentSession(date time.Time) ([]*domain.Ticket,
 }
 
 func (uc *TicketUseCase) UpdateTicket(ticket *domain.Ticket) error {
-	if ticket == nil {
-		return errors.New("Por favor ingrese un ticket válido.")
-	}
 
-	if err := uc.repo.UpdateTicket(ticket); err != nil {
+	existTicket, err := uc.repo.GetTicketByID(ticket.Id)
+
+	if err != nil {
 		return err
 	}
-	return nil
+
+	if existTicket == nil {
+		return errors.New("No se encontro un Ticket con este id")
+	}
+
+	existTicket.Total = ticket.Total
+	existTicket.IsCompleted = ticket.IsCompleted
+
+	if err := existTicket.ValidateForUpdate(); err != nil {
+		return err
+	}
+
+	return uc.repo.UpdateTicket(existTicket)
 }
 
 func (uc *TicketUseCase) DeleteTicket(ticketID int) error {

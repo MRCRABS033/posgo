@@ -3,6 +3,31 @@ package domain
 import "time"
 
 // ready
+type CashInRepository interface {
+	GetCashInByID(cashInID int) (*CashIn, error)
+	GetAllCashInByUserID(userID int) ([]*CashIn, error)
+	CreateCashIn(cashIn *CashIn) (*CashIn, error)
+	UpdateCashIn(cashIn *CashIn) (*CashIn, error)
+}
+
+// ready
+type CashOutRepository interface {
+	GetCashOutByID(cashOutID int) (*CashOut, error)
+	GetAllCashOutByUserID(userID int) ([]*CashOut, error)
+	CreateCashOut(cashOut *CashOut) (*CashOut, error)
+	UpdateCashOut(cashOut *CashOut) (*CashOut, error)
+}
+
+// ready
+type DepartmentRepository interface {
+	GetDepartmentByName(name string) (*Department, error)
+	GetAllDepartments() ([]*Department, error)
+	CreateDepartment(department *Department) error
+	UpdateDepartment(department *Department) error
+	RemoveDepartment(name string) error
+}
+
+// ready
 type ProductRepository interface {
 	GetProductByCode(code string) (*Product, error)
 	GetProductByName(name string) (*Product, error)
@@ -14,22 +39,15 @@ type ProductRepository interface {
 	RemoveProduct(code string) error
 }
 
+// ready
 type PermissionRepository interface {
 	GetAllUserPermissions(UserId int) (*Permission, error)
 	UpdatePermission(permission *Permission) error
 }
 
-// pending
-type DepartmentRepository interface {
-	GetDepartmentByName(name string) (*Department, error)
-	GetAllDepartments() ([]*Department, error)
-	CreateDepartment(department *Department) error
-	UpdateDepartment(department *Department) error
-	RemoveDepartment(name string) error
-}
-
+// ready
 type TicketRepository interface {
-	CreateTicket(ticket *Ticket) error
+	CreateTicket(ticket *Ticket) (*Ticket, error)
 	GetTicketByID(ticketID int) (*Ticket, error)
 	GetAllCurrentDay(date time.Time) ([]*Ticket, error)
 	GetAllCurrentMonth(date time.Time) ([]*Ticket, error)
@@ -38,7 +56,11 @@ type TicketRepository interface {
 	DeleteTicket(ticketID int) error
 }
 
+// pending
 type TicketItemRepository interface {
+	AddQuantity(amount float64) error
+	ReduceQuantity(amount float64) error
+	GetByTicketIDAndProductCode(ticketID int, productCode string) (*TicketItem, error)
 	GetAllByTicketID(ticketID int) ([]*TicketItem, error)
 	CreateTicketItem(ticketItem *TicketItem) error
 	UpdateTicketItem(ticketItem *TicketItem) error
@@ -50,4 +72,13 @@ type SessionRepository interface {
 	CreateSession(session *Session) error
 	CloseSession(token string) error
 	GetActiveSessionByToken(token string) (*Session, error)
+}
+
+type UserRepository interface {
+	GetUserByID(userID int) (*User, error)
+	GetUserByName(name string) (*User, error)
+	CreateUser(user *User) (*User, error)
+	UpdateUser(user *User) (*User, error)
+	ModifiedPermissionsUser(user *User) (*User, error)
+	RemoveUser(user *User) (*User, error)
 }

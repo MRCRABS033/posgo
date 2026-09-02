@@ -6,15 +6,14 @@ type Permission struct {
 	DeleteProduct                bool
 	ModifiedUnitCostPriceProduct bool
 	ModifiedUnitSellPriceProduct bool
+	ModifiedStockProduct         bool
 	ModifiedDiscount             bool
 	ModifiedName                 bool
 	ModifiedAvailableDiscount    bool
-	ModifiedStock                bool
 	ModifiedDepartment           bool
-
-	ModifiedUserName        bool
-	ModifieldUserLastName   bool
-	ModifiedUserPhoneNumber bool
-	ModifiedUserPermissions bool
-	ModifiedUserPassword    bool
+	ModifiedUserName             bool
+	ModifieldUserLastName        bool
+	ModifiedUserPhoneNumber      bool
+	ModifiedUserPermissions      bool
+	ModifiedUserPassword         bool
 }

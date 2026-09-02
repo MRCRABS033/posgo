@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"posgo/internal/domain"
+	"strings"
 )
 
 type DepartmentUseCase struct {
@@ -40,8 +41,8 @@ func (uc *DepartmentUseCase) GetAllDepartments() ([]*domain.Department, error) {
 }
 
 func (uc *DepartmentUseCase) CreateDepartment(name string) (*domain.Department, error) {
-	if name == "" {
-		return nil, errors.New("Por favor ingrese un nombre de departamento.")
+	if strings.TrimSpace(name) == "" {
+		return nil, errors.New("Por favor escriba el nombre del departamento.")
 	}
 
 	existDepartment, err := uc.repo.GetDepartmentByName(name)
