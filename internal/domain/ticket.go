@@ -6,7 +6,7 @@ import (
 )
 
 type Ticket struct {
-	session     *Session
+	Session     *Session
 	Id          int
 	CreatedAt   time.Time
 	Items       []*TicketItem
@@ -15,7 +15,7 @@ type Ticket struct {
 }
 
 func (t *Ticket) Validate() error {
-	if t.session == nil {
+	if t.Session == nil {
 		return errors.New("hace falta tener una session abierta.")
 	}
 	if t.CreatedAt.IsZero() {
@@ -32,7 +32,7 @@ func (t *Ticket) ValidateForCreation() error {
 	if t == nil {
 		return errors.New("datos de ticket inválidos.")
 	}
-	if t.session == nil {
+	if t.Session == nil {
 		return errors.New("hace falta tener una session abierta.")
 	}
 	if t.CreatedAt.IsZero() {

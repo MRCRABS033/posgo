@@ -28,6 +28,12 @@ type DepartmentRepository interface {
 }
 
 // ready
+type PermissionRepository interface {
+	GetAllUserPermissions(UserId int) (*Permission, error)
+	UpdatePermission(permission *Permission) error
+}
+
+// ready
 type ProductRepository interface {
 	GetProductByCode(code string) (*Product, error)
 	GetProductByName(name string) (*Product, error)
@@ -40,9 +46,14 @@ type ProductRepository interface {
 }
 
 // ready
-type PermissionRepository interface {
-	GetAllUserPermissions(UserId int) (*Permission, error)
-	UpdatePermission(permission *Permission) error
+type TicketItemRepository interface {
+	AddQuantity(amount float64) error
+	ReduceQuantity(amount float64) error
+	GetByTicketIDAndProductCode(ticketID int, productCode string) (*TicketItem, error)
+	GetAllByTicketID(ticketID int) ([]*TicketItem, error)
+	CreateTicketItem(ticketItem *TicketItem) error
+	UpdateTicketItem(ticketItem *TicketItem) error
+	RemoveTicketItem(ticketID int, productCode string) error
 }
 
 // ready
@@ -54,17 +65,6 @@ type TicketRepository interface {
 	GetAllCurrentSession(date time.Time) ([]*Ticket, error)
 	UpdateTicket(ticket *Ticket) error
 	DeleteTicket(ticketID int) error
-}
-
-// pending
-type TicketItemRepository interface {
-	AddQuantity(amount float64) error
-	ReduceQuantity(amount float64) error
-	GetByTicketIDAndProductCode(ticketID int, productCode string) (*TicketItem, error)
-	GetAllByTicketID(ticketID int) ([]*TicketItem, error)
-	CreateTicketItem(ticketItem *TicketItem) error
-	UpdateTicketItem(ticketItem *TicketItem) error
-	RemoveTicketItem(ticketID int, productCode string) error
 }
 
 // pending

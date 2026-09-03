@@ -11,7 +11,7 @@ type User struct {
 	LastName    string
 	Password    string
 	PhoneNumber string
-	permission  *Permission
+	Permission  *Permission
 }
 
 type UserSession struct {
@@ -32,7 +32,7 @@ func (u *User) Validation() error {
 	if len(u.Password) < 6 {
 		return errors.New("La contrasena no puede ser menor a 6 caracteres")
 	}
-	if u.permission == nil {
+	if u.Permission == nil {
 		return errors.New("Los permisos no pueden venir vacios.")
 	}
 	return nil

@@ -5,6 +5,7 @@ import (
 )
 
 type TicketItem struct {
+	TicketID int
 	Session  *Session
 	Product  *Product
 	Quantity float64

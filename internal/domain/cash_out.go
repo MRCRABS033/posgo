@@ -7,8 +7,8 @@ import (
 
 type CashOut struct {
 	ID        int
-	userID    int
-	sessionID int
+	UserID    int
+	SessionID int
 	Quantity  float64
 	Concept   string
 }

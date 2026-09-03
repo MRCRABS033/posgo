@@ -14,7 +14,7 @@ func NewTicketItemUseCase(repo domain.TicketItemRepository) *TicketItemUseCase {
 	return &TicketItemUseCase{repo: repo}
 }
 
-func (uc *TicketItemUseCase) AddQuantity(ticketID int, productCode string, amount float64) error {
+func (uc *TicketItemUseCase) ModifyQuantity(ticketID int, productCode string, amount float64, action func(*domain.TicketItem) error) error {
 	if ticketID <= 0 {
 		return errors.New("Por favor ingrese un ID de ticket válido.")
 	}
@@ -33,20 +33,24 @@ func (uc *TicketItemUseCase) AddQuantity(ticketID int, productCode string, amoun
 		return errors.New("El item no se encuentra en el ticket.")
 	}
 
-	if err := item.AddQuantity(amount); err != nil {
+	if err := action(item); err != nil {
 		return err
 	}
 
-	if err := uc.repo.UpdateTicketItem(item); err != nil {
-		return nil
-	}
-	return nil
+	return uc.repo.UpdateTicketItem(item)
+
+}
+
+func (uc *TicketItemUseCase) AddQuantity(ticketID int, productCode string, amount float64) error {
+	return uc.ModifyQuantity(ticketID, productCode, amount, func(item *domain.TicketItem) error {
+		return item.AddQuantity(amount)
+	})
 }
 
 func (uc *TicketItemUseCase) ReduceQuantity(ticketID int, productCode string, amount float64) error {
-	if ticketID <= 0 {
-		return errors.New("Por favor infrese un ID de ticket.")
-	}
+	return uc.ModifyQuantity(ticketID, productCode, amount, func(item *domain.TicketItem) error {
+		return item.ReduceQuantity(amount)
+	})
 }
 
 func (uc *TicketItemUseCase) GetByTicketIDAndProductCode(ticketID int, productCode string) (*domain.TicketItem, error) {

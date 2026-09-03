@@ -7,8 +7,8 @@ import (
 
 type CashIn struct {
 	ID        int
-	userID    int
-	sessionID int
+	UserID    int
+	SessionID int
 	Concept   string
 	Quantity  float64
 }
