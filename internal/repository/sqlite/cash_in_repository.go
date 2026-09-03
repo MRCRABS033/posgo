@@ -5,6 +5,24 @@ import (
 	"posgo/internal/domain"
 )
 
+type CashInSqlModel struct {
+	ID        int
+	UserID    int
+	SessionID int
+	Concept   string
+	Quantity  float64
+}
+
+func (m *CashInSqlModel) toDomain() *domain.CashIn {
+	return &domain.CashIn{
+		ID:        m.ID,
+		UserID:    m.UserID,
+		SessionID: m.SessionID,
+		Concept:   m.Concept,
+		Quantity:  m.Quantity,
+	}
+}
+
 type CashInRepository struct {
 	db *sql.DB
 }
@@ -20,13 +38,13 @@ func (r *CashInRepository) GetCashInByID(cashInID int) (*domain.CashIn, error) {
 			WHERE id = ?
 		`
 
-	c := &domain.CashIn{}
+	var m CashInSqlModel
 	err := r.db.QueryRow(query, cashInID).Scan(
-		&c.ID,
-		&c.Quantity,
-		&c.Concept,
-		&c.SessionID,
-		&c.UserID,
+		&m.ID,
+		&m.UserID,
+		&m.SessionID,
+		&m.Concept,
+		&m.Quantity,
 	)
 
 	if err == sql.ErrNoRows {
@@ -35,7 +53,7 @@ func (r *CashInRepository) GetCashInByID(cashInID int) (*domain.CashIn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c, nil
+	return m.toDomain(), nil
 }
 
 func (r *CashInRepository) GetAllCashInByUserID(userID int) ([]*domain.CashIn, error) {
@@ -53,18 +71,18 @@ func (r *CashInRepository) GetAllCashInByUserID(userID int) ([]*domain.CashIn, e
 	var cashIns []*domain.CashIn
 
 	for rows.Next() {
-		c := &domain.CashIn{}
+		var m CashInSqlModel
 
 		if err := rows.Scan(
-			&c.ID,
-			&c.Quantity,
-			&c.Concept,
-			&c.SessionID,
-			&c.UserID,
+			m.ID,
+			m.UserID,
+			m.SessionID,
+			m.Concept,
+			m.Quantity,
 		); err != nil {
 			return nil, err
 		}
-		cashIns = append(cashIns, c)
+		cashIns = append(cashIns, m.toDomain())
 	}
 
 	if err := rows.Err(); err != nil {
