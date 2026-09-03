@@ -28,12 +28,8 @@ func (uc *PermissionUseCase) GetAllUserPermissions(UserId int) (*domain.Permissi
 
 func (uc *PermissionUseCase) UpdatePermission(permission *domain.Permission) error {
 
-	if permission == nil {
-		return errors.New("Por favor ingrese un permiso válido.")
-	}
-
-	if permission.UserID == 0 {
-		return errors.New("Por favor ingrese un ID de usuario.")
+	if err := permission.Validate(); err != nil {
+		return err
 	}
 
 	userPermissions, err := uc.repo.GetAllUserPermissions(permission.UserID)
@@ -45,8 +41,5 @@ func (uc *PermissionUseCase) UpdatePermission(permission *domain.Permission) err
 		return errors.New("No se encontraron permisos para este usuario.")
 	}
 
-	if err := uc.repo.UpdatePermission(permission); err != nil {
-		return err
-	}
-	return nil
+	return uc.repo.UpdatePermission(permission)
 }

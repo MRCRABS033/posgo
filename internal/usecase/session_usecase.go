@@ -1,64 +1,91 @@
 package usecase
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
 
 	"posgo/internal/domain"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type SessionUseCase struct {
-	repo domain.SessionRepository
+	sessionRepo domain.SessionRepository
+	userRepo    domain.UserRepository
 }
 
-func NewSessionUseCase(repo domain.SessionRepository) *SessionUseCase {
-	return &SessionUseCase{repo: repo}
+func NewSessionUseCase(sr domain.SessionRepository, ur domain.UserRepository) *SessionUseCase {
+	return &SessionUseCase{
+		sessionRepo: sr,
+		userRepo:    ur,
+	}
+}
+
+func generateSecureUUIDs() string {
+	bytes := make([]byte, 32)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "fallback-token-secure"
+	}
+	return hex.EncodeToString(bytes)
 }
 
 // 1. Iniciar sesión (Login / CreateSession)
-func (uc *SessionUseCase) Login(session *domain.Session) error {
-	if session == nil {
-		return errors.New("los datos de la sesión son obligatorios.")
+func (uc *SessionUseCase) Login(username, password string) (*domain.Session, error) {
+
+	user, err := uc.userRepo.GetUserByName(username)
+	if err != nil {
+		return nil, errors.New("usuario o contrasena incorrectos")
 	}
 
-	// Aplicamos la regla de negocio del dominio para el login
-	if err := session.ValidateForLogin(); err != nil {
-		return err
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if user.Password != password {
+		return nil, errors.New("usuario o contrasena incorrectos")
 	}
 
-	// Guardamos la sesión mediante el repositorio
-	return uc.repo.CreateSession(session)
+	new_uuid := generateSecureUUIDs()
+
+	session := &domain.Session{
+		UserID:   user.ID,
+		UUIDs:    new_uuid,
+		LoginAt:  time.Now(),
+		IsActive: true,
+	}
+
+	err = uc.sessionRepo.CreateSession(session)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
 }
 
-// 2. Cerrar sesión (Logout / CloseSession)
-func (uc *SessionUseCase) Logout(token string) error {
-	if strings.TrimSpace(token) == "" {
+func (uc *SessionUseCase) Logout(UUID string) error {
+	if strings.TrimSpace(UUID) == "" {
 		return errors.New("el token de sesión no puede estar vacío.")
 	}
 
-	// Opcional: Podrías buscar primero la sesión activa para validar sus campos antes de cerrarla,
-	// o delegar directamente la actualización en el repositorio mediante el token.
-	session, err := uc.repo.GetActiveSessionByToken(token)
+	session, err := uc.sessionRepo.GetActiveSessionByToken(UUID)
 	if err != nil {
 		return err
 	}
 	if session == nil {
-		return errors.New("no se encontró una sesión activa con el token proporcionado.")
+		return errors.New("no se encontró una sesión activa con el UUID proporcionado.")
 	}
 
-	// Actualizamos los campos necesarios para el cierre en el dominio
 	now := time.Now()
 	session.LogoutAt = &now
 	session.IsActive = false
 
-	// Validamos el cierre usando el método de tu entidad
 	if err := session.ValidateForLogout(); err != nil {
 		return err
 	}
 
-	// Cerramos la sesión en la base de datos
-	return uc.repo.CloseSession(token)
+	return uc.sessionRepo.CloseSession(UUID)
 }
 
 // 3. Obtener sesión activa por token
@@ -67,7 +94,7 @@ func (uc *SessionUseCase) GetActiveSessionByToken(token string) (*domain.Session
 		return nil, errors.New("el token de búsqueda no puede estar vacío.")
 	}
 
-	session, err := uc.repo.GetActiveSessionByToken(token)
+	session, err := uc.sessionRepo.GetActiveSessionByToken(token)
 	if err != nil {
 		return nil, err
 	}

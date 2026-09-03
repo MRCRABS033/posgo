@@ -4,10 +4,17 @@ import (
 	"errors"
 	"posgo/internal/domain"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase struct {
 	repo domain.UserRepository
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func NewUserUseCase(repo domain.UserRepository) *UserUseCase {
@@ -47,16 +54,17 @@ func (uc *UserUseCase) GetUserByName(name string) (*domain.User, error) {
 	return user, nil
 }
 
-func (uc *UserUseCase) CreateUser(user *domain.User) (*domain.User, error) {
+func (uc *UserUseCase) CreateUser(user *domain.User, rawPassword string) (*domain.User, error) {
+
+	hashedPassword, err := HashPassword(rawPassword)
+	user.Password = hashedPassword
 	if err := user.Validation(); err != nil {
 		return nil, err
 	}
-	user, err := uc.repo.CreateUser(user)
 	if err != nil {
 		return nil, err
 	}
-
-	return user, nil
+	return uc.repo.CreateUser(user)
 }
 
 func (uc *UserUseCase) UpdateUser(user *domain.User) (*domain.User, error) {

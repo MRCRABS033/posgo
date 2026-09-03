@@ -20,7 +20,7 @@ func (r *SessionRepository) CreateSession(session *domain.Session) error {
     `
 	_, err := r.db.Exec(query,
 		session.UserID,
-		session.Token,
+		session.UUIDs,
 		session.LoginAt,
 		session.LogoutAt,
 		session.IsActive,
@@ -61,7 +61,7 @@ func (r *SessionRepository) GetActiveSessionByToken(token string) (*domain.Sessi
 	err := r.db.QueryRow(query, token).Scan(
 		&s.ID,
 		&s.UserID,
-		&s.Token,
+		&s.UUIDs,
 		&s.LoginAt,
 		&s.LogoutAt,
 		&s.IsActive,

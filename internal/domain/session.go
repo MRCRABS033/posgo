@@ -9,7 +9,7 @@ import (
 type Session struct {
 	ID       int
 	UserID   int
-	Token    string
+	UUIDs    string
 	LoginAt  time.Time
 	LogoutAt *time.Time
 	IsActive bool
@@ -23,7 +23,7 @@ func (s *Session) Validate() error {
 	if s.UserID <= 0 {
 		return errors.New("El ID del usuario no puede estar vacio")
 	}
-	if strings.TrimSpace(s.Token) == "" {
+	if strings.TrimSpace(s.UUIDs) == "" {
 		return errors.New("El token no puede venir vacio.")
 	}
 
@@ -56,6 +56,10 @@ func (s *Session) ValidateForLogout() error {
 
 	if s == nil {
 		return errors.New("datos de sesión inválidos.")
+	}
+
+	if strings.TrimSpace(s.UUIDs) == "" {
+		return errors.New("Errors al cerrar la sesion")
 	}
 
 	if s.ID <= 0 {
