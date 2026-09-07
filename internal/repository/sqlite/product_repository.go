@@ -15,14 +15,14 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 
 func (r *ProductRepository) GetProductByCode(code string) (*domain.Product, error) {
 	query := `
-        SELECT code, name, stock, department, cost_price, sell_price
+        SELECT code, product_name, stock, department, cost_price, sell_price
         FROM products
         WHERE code = ?
     `
 
 	p := &domain.Product{}
 	err := r.db.QueryRow(query, code).Scan(
-		&p.Code, &p.Name, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
+		&p.Code, &p.ProductName, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
 	)
 
 	if err == sql.ErrNoRows {
@@ -44,7 +44,7 @@ func (r *ProductRepository) GetProductByName(name string) (*domain.Product, erro
 
 	p := &domain.Product{}
 	err := r.db.QueryRow(query, name).Scan(
-		&p.Code, &p.Name, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
+		&p.Code, &p.ProductName, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
 	)
 
 	if err == sql.ErrNoRows {
@@ -75,7 +75,7 @@ func (r *ProductRepository) GetProductLowStock() ([]*domain.Product, error) {
 	for rows.Next() {
 		p := &domain.Product{}
 		if err := rows.Scan(
-			&p.Code, &p.Name, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
+			&p.Code, &p.ProductName, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
 		); err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func (r *ProductRepository) GetProductbyDepartment(department string) ([]*domain
 	for rows.Next() {
 		p := &domain.Product{}
 		if err := rows.Scan(
-			&p.Code, &p.Name, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
+			&p.Code, &p.ProductName, &p.Stock, &p.Department, &p.UnitCostPrice, &p.UnitSellPrice,
 		); err != nil {
 			return nil, err
 		}
@@ -129,7 +129,7 @@ func (r *ProductRepository) CreateProduct(product *domain.Product) error {
 
 	_, err := r.db.Exec(query,
 		product.Code,
-		product.Name,
+		product.ProductName,
 		product.Stock,
 		product.Department,
 		product.UnitCostPrice,
@@ -147,7 +147,7 @@ func (r *ProductRepository) UpdateProduct(product *domain.Product) error {
     `
 
 	result, err := r.db.Exec(query,
-		product.Name,
+		product.ProductName,
 		product.Stock,
 		product.Department,
 		product.UnitCostPrice,

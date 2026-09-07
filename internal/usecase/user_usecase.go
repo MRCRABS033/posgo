@@ -48,7 +48,7 @@ func (uc *UserUseCase) GetUserByName(name string) (*domain.User, error) {
 	}
 
 	if user == nil {
-		return nil, errors.New("usuario no encontrado.")
+		return nil, errors.New("usuario no encontrado desde usecase.")
 	}
 
 	return user, nil

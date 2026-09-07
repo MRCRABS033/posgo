@@ -92,7 +92,7 @@ func (uc *ProductUseCase) CreateProduct(code, name string, costPrice, sellPrice 
 
 	product := &domain.Product{
 		Code:              code,
-		Name:              name,
+		ProductName:       name,
 		UnitCostPrice:     costPrice,
 		UnitSellPrice:     sellPrice,
 		Discount:          0.00,
@@ -128,7 +128,7 @@ func (uc *ProductUseCase) UpdateProduct(code, name string, unitCost, unitSell, d
 		return errors.New("El producto que intentas modificar no existe.")
 	}
 
-	existingProduct.Name = name
+	existingProduct.ProductName = name
 	existingProduct.UnitCostPrice = unitCost
 	existingProduct.UnitSellPrice = unitSell
 	existingProduct.Discount = discount

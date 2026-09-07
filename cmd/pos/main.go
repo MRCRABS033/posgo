@@ -25,6 +25,10 @@ func main() {
 	}
 	log.Println("Conexión con SQLite establecida exitosamente.")
 
+	if err := sqlite.InitDB(db); err != nil {
+		log.Fatalf("Error al inicializar la base de datos y migraciones: %v", err)
+	}
+	log.Println("Base de datos y migraciones inicializadas correctamente.")
 	//inyeccion de dependencias: repositorios (capa de infraestructura)
 	//cashInRepo := sqlite.NewCashInRepository(db)
 	//cashOutRepo := sqlite.NewCashOutRepository(db)

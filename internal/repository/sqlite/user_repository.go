@@ -34,7 +34,7 @@ func (r *UserRepository) GetUserByID(userID int) (*domain.User, error) {
 		&u.Permission.ModifiedUnitSellPriceProduct,
 		&u.Permission.ModifiedStockProduct,
 		&u.Permission.ModifiedDiscount,
-		&u.Permission.ModifiedName,
+		&u.Permission.ModifiedProductName,
 		&u.Permission.ModifiedAvailableDiscount,
 		&u.Permission.ModifiedDepartment,
 		&u.Permission.ModifiedUserName,
@@ -56,7 +56,19 @@ func (r *UserRepository) GetUserByID(userID int) (*domain.User, error) {
 }
 
 func (r *UserRepository) GetUserByName(name string) (*domain.User, error) {
-	query := `SELECT * FROM users WHERE name = ?`
+	query := `
+        SELECT 
+            u.id, u.name, u.last_name, u.password, u.phone_number,
+            p.id, p.user_id, p.create_product, p.delete_product,
+            p.modified_unit_cost_price_product, p.modified_unit_sell_price_product,
+            p.modified_stock_product, p.modified_discount, p.modified_product_name,
+            p.modified_available_discount, p.modified_department, p.modified_user_name,
+            p.modified_user_last_name, p.modified_user_phone_number,
+            p.modified_user_permissions, p.modified_user_password
+        FROM users u
+        LEFT JOIN permissions p ON u.id = p.user_id
+        WHERE u.name = ?
+    `
 
 	u := &domain.User{
 		Permission: &domain.Permission{},
@@ -66,6 +78,7 @@ func (r *UserRepository) GetUserByName(name string) (*domain.User, error) {
 		&u.ID,
 		&u.Name,
 		&u.LastName,
+		&u.Password,
 		&u.PhoneNumber,
 		&u.Permission.ID,
 		&u.Permission.UserID,
@@ -75,7 +88,7 @@ func (r *UserRepository) GetUserByName(name string) (*domain.User, error) {
 		&u.Permission.ModifiedUnitSellPriceProduct,
 		&u.Permission.ModifiedStockProduct,
 		&u.Permission.ModifiedDiscount,
-		&u.Permission.ModifiedName,
+		&u.Permission.ModifiedProductName,
 		&u.Permission.ModifiedAvailableDiscount,
 		&u.Permission.ModifiedDepartment,
 		&u.Permission.ModifiedUserName,
@@ -101,7 +114,6 @@ func (r *UserRepository) CreateUser(user *domain.User) (*domain.User, error) {
 	}
 	defer tx.Rollback()
 
-	// A. Insertar el usuario
 	queryUser := `INSERT INTO users (name, last_name, phone_number) VALUES (?, ?, ?)`
 	result, err := tx.Exec(queryUser, user.Name, user.LastName, user.PhoneNumber)
 	if err != nil {
@@ -114,7 +126,6 @@ func (r *UserRepository) CreateUser(user *domain.User) (*domain.User, error) {
 	}
 	user.ID = int(userID)
 
-	// B. Insertar sus permisos asociados (si los tiene definidos)
 	if user.Permission != nil {
 		queryPerm := `
             INSERT INTO permissions (
@@ -134,7 +145,7 @@ func (r *UserRepository) CreateUser(user *domain.User) (*domain.User, error) {
 			user.Permission.ModifiedUnitSellPriceProduct,
 			user.Permission.ModifiedStockProduct,
 			user.Permission.ModifiedDiscount,
-			user.Permission.ModifiedName,
+			user.Permission.ModifiedProductName,
 			user.Permission.ModifiedAvailableDiscount,
 			user.Permission.ModifiedDepartment,
 			user.Permission.ModifiedUserName,
@@ -155,7 +166,6 @@ func (r *UserRepository) CreateUser(user *domain.User) (*domain.User, error) {
 	return user, nil
 }
 
-// 2. Actualizar Datos Generales del Usuario (Nombre, Apellido, Teléfono)
 func (r *UserRepository) UpdateUser(user *domain.User) (*domain.User, error) {
 	query := `
         UPDATE users 
@@ -178,7 +188,6 @@ func (r *UserRepository) UpdateUser(user *domain.User) (*domain.User, error) {
 	return user, nil
 }
 
-// 3. Modificar Exclusivamente los Permisos del Usuario
 func (r *UserRepository) ModifiedPermissionsUser(user *domain.User) (*domain.User, error) {
 	if user.Permission == nil {
 		return nil, errors.New("el usuario no cuenta con un objeto de permisos válido")
@@ -201,7 +210,7 @@ func (r *UserRepository) ModifiedPermissionsUser(user *domain.User) (*domain.Use
 		user.Permission.ModifiedUnitSellPriceProduct,
 		user.Permission.ModifiedStockProduct,
 		user.Permission.ModifiedDiscount,
-		user.Permission.ModifiedName,
+		user.Permission.ModifiedProductName,
 		user.Permission.ModifiedAvailableDiscount,
 		user.Permission.ModifiedDepartment,
 		user.Permission.ModifiedUserName,
@@ -226,7 +235,6 @@ func (r *UserRepository) ModifiedPermissionsUser(user *domain.User) (*domain.Use
 	return user, nil
 }
 
-// 4. Eliminar Usuario (Borra primero los permisos y luego el usuario usando una transacción)
 func (r *UserRepository) RemoveUser(user *domain.User) (*domain.User, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -234,13 +242,11 @@ func (r *UserRepository) RemoveUser(user *domain.User) (*domain.User, error) {
 	}
 	defer tx.Rollback()
 
-	// A. Borramos primero los permisos vinculados (para evitar restricciones de llave foránea)
 	_, err = tx.Exec(`DELETE FROM permissions WHERE user_id = ?`, user.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// B. Borramos el usuario
 	result, err := tx.Exec(`DELETE FROM users WHERE id = ?`, user.ID)
 	if err != nil {
 		return nil, err

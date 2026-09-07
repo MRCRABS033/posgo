@@ -4,6 +4,7 @@ import (
 	"posgo/internal/usecase"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // Define los estados o pantallas de tu POS
@@ -12,6 +13,11 @@ type ScreenState int
 const (
 	StateLogin ScreenState = iota
 	StateSales
+	StateInventory
+	StateReports
+	StateCreateProduct
+	StateEditProduct
+	StateCreateUser
 )
 
 // MainModel es el modelo raíz que maneja toda la aplicación
@@ -20,11 +26,11 @@ type MainModel struct {
 	width      int
 	height     int
 	loginModel LoginModel // Instancia del modelo de login
-
+	saleModel  *SaleModel
 	// Referencias a los casos de uso para pasárselos a las vistas
 	sessionUC *usecase.SessionUseCase
 	productUC *usecase.ProductUseCase
-
+	activeTab int
 	// Datos de sesión activa tras un login exitoso
 	username  string
 	sessionID int
@@ -34,6 +40,7 @@ func NewMainModel(sessionUC *usecase.SessionUseCase, productUC *usecase.ProductU
 	return MainModel{
 		state:      StateLogin,
 		loginModel: NewLoginModel(sessionUC), // Inicializamos el login
+		saleModel:  NewSaleModel(productUC),
 		sessionUC:  sessionUC,
 		productUC:  productUC,
 	}
@@ -47,13 +54,50 @@ func (m MainModel) Init() tea.Cmd {
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		// Guardamos el ancho y alto actual de la terminal
 		m.width = msg.Width
 		m.height = msg.Height
+
+		var cmd tea.Cmd
+		switch m.state {
+		case StateLogin:
+			m.loginModel, cmd = m.loginModel.Update(msg)
+		case StateSales:
+			m.saleModel, cmd = m.saleModel.Update(msg)
+		}
+		return m, cmd
 
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyCtrlC {
 			return m, tea.Quit
+		}
+
+		if m.state != StateLogin {
+			switch msg.String() {
+			case "f1":
+				m.activeTab = 0
+				m.state = StateSales
+
+				// ¡CLAVE! Si ya tenemos el tamaño de la pantalla, se lo mandamos al saleModel al presionar F1
+				if m.width > 0 && m.height > 0 {
+					m.saleModel.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
+				}
+				return m, nil
+
+			case "f2":
+				m.activeTab = 1
+				m.state = StateInventory
+				return m, nil
+
+			case "f3":
+				m.activeTab = 2
+				m.state = StateReports
+				return m, nil
+
+			case "f4":
+				m.activeTab = 3
+				m.state = StateCreateProduct
+				return m, nil
+			}
 		}
 	}
 
@@ -68,11 +112,20 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.username = m.loginModel.LoggedInUser
 			m.sessionID = m.loginModel.SessionID
 			m.state = StateSales
+			m.activeTab = 0
+
+			// ¡CLAVE! Al pasar del login a ventas por primera vez, le inyectamos
+			// el ancho y alto actual para que la tabla abarque toda la pantalla de inmediato.
+			if m.width > 0 && m.height > 0 {
+				m.saleModel.Update(tea.WindowSizeMsg{Width: m.width, Height: m.height})
+			}
 		}
 		return m, cmd
 
 	case StateSales:
-		// Aquí agregarás la lógica de actualización para el módulo de ventas más adelante
+		var cmd tea.Cmd
+		m.saleModel, cmd = m.saleModel.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
@@ -80,15 +133,25 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MainModel) View() string {
 	// Dependiendo del estado, renderizamos la pantalla correspondiente
-	switch m.state {
-	case StateLogin:
+	if m.state == StateLogin {
 		return m.loginModel.View()
-
-	case StateSales:
-		// Contenido temporal para el módulo de ventas envuelto en el layout
-		//salesContent := "¡Bienvenido al POS!\n[1] Registrar venta\n[2] Consultar producto"
-		return RenderSalesLayout(m.username, m.sessionID, m.width, m.height)
 	}
 
-	return "Cargando..."
+	topNav := m.renderTopNav()
+
+	var moduleContent string
+	switch m.state {
+	case StateSales:
+		moduleContent = m.saleModel.View()
+	case StateInventory:
+		moduleContent = "Modulo de Inventario en desarrollo..."
+	case StateReports:
+		moduleContent = "Modulo de reportes en desarrollo..."
+	case StateCreateProduct:
+		moduleContent = "Moddulo de productos en desarrollo..."
+	default:
+		moduleContent = "Cargando..."
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, topNav, moduleContent)
 }

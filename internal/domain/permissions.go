@@ -11,7 +11,7 @@ type Permission struct {
 	ModifiedUnitSellPriceProduct bool
 	ModifiedStockProduct         bool
 	ModifiedDiscount             bool
-	ModifiedName                 bool
+	ModifiedProductName          bool
 	ModifiedAvailableDiscount    bool
 	ModifiedDepartment           bool
 	ModifiedUserName             bool

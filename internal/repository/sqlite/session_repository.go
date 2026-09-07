@@ -15,7 +15,7 @@ func NewSessionRepository(db *sql.DB) *SessionRepository {
 
 func (r *SessionRepository) CreateSession(session *domain.Session) error {
 	query := `
-        INSERT INTO sessions (user_id, token, login_at, logout_at, is_active)
+        INSERT INTO sessions (user_id, uuid, login_at, logout_at, is_active)
         VALUES (?, ?, ?, ?, ?)
     `
 	_, err := r.db.Exec(query,

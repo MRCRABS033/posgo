@@ -38,11 +38,15 @@ func (uc *SessionUseCase) Login(username, password string) (*domain.Session, err
 
 	user, err := uc.userRepo.GetUserByName(username)
 	if err != nil {
-		return nil, errors.New("usuario o contrasena incorrectos")
+		return nil, errors.New("usuario no encontrado desde la base de datos")
+	}
+
+	if user == nil {
+		return nil, errors.New("usuario nulo")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if user.Password != password {
+	if err != nil {
 		return nil, errors.New("usuario o contrasena incorrectos")
 	}
 

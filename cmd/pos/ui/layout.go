@@ -25,24 +25,3 @@ func RenderSalesLayout(username string, sessionID int, width, height int) string
 		body,
 	)
 }
-
-// RenderLoginLayout arma la pantalla de inicio de sesión centrada
-func RenderLoginLayout(width, height int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(ColorPrimary).
-		Padding(2, 4)
-
-	loginBox := boxStyle.Render("=== INICIAR SESIÓN ===")
-
-	// Si tenemos las dimensiones de la pantalla, podemos centrar la caja
-	if width > 0 && height > 0 {
-		return lipgloss.Place(
-			width, height,
-			lipgloss.Center, lipgloss.Center,
-			loginBox,
-		)
-	}
-
-	return loginBox
-}

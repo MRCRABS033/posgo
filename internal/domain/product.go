@@ -8,7 +8,7 @@ import (
 type Product struct {
 	ID                int
 	Code              string
-	Name              string
+	ProductName       string
 	UnitCostPrice     float64
 	UnitSellPrice     float64
 	Discount          float64
@@ -25,7 +25,7 @@ func (p *Product) Validate() error {
 		return errors.New("datos del producto inválidos.")
 	}
 
-	if strings.TrimSpace(p.Name) == "" {
+	if strings.TrimSpace(p.ProductName) == "" {
 		return errors.New("Ingrese un nombre valido.")
 	}
 

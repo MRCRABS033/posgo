@@ -17,6 +17,8 @@ type LoginModel struct {
 	errMessage    string
 	sessionUC     *usecase.SessionUseCase
 
+	width  int
+	height int
 	//callback o senal para avisarle al MainModel que el login fue exitoso
 	LoggedIn      bool
 	LoggedInUser  string
@@ -26,7 +28,7 @@ type LoginModel struct {
 
 func NewLoginModel(sessionUC *usecase.SessionUseCase) LoginModel {
 	userInput := textinput.New()
-	userInput.Placeholder = "Ej. 1 o usuario"
+	userInput.Placeholder = "Usuario"
 	userInput.Focus()
 	userInput.CharLimit = 20
 	userInput.Width = 30
@@ -54,6 +56,9 @@ func (m LoginModel) Update(msg tea.Msg) (LoginModel, tea.Cmd) {
 	var cmds [2]tea.Cmd
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyTab, tea.KeyShiftTab, tea.KeyDown, tea.KeyUp:
@@ -121,11 +126,25 @@ func (m LoginModel) View() string {
 
 	help := HelpStyle.Render("\n[Tab] Cambiar campo  |  [Enter] Ingresar  |  [Ctrl+C] Salir")
 
-	return lipgloss.JoinVertical(
+	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
 		"\n",
 		uiBox,
+		"\n",
 		help,
 	)
+
+	if m.width == 0 || m.height == 0 {
+		return content
+	}
+
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		content,
+	)
+
 }
