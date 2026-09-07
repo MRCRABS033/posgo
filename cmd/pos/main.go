@@ -53,7 +53,7 @@ func main() {
 	//userUseCase := usecase.NewUserUseCase(userRepo)
 
 	initialModel := ui.NewMainModel(sessionUseCase, productUseCase)
-	p := tea.NewProgram(initialModel, tea.WithAltScreen()) // tea.WithAltScreen usa pantalla completa
+	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion()) // tea.WithAltScreen usa pantalla completa
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Error al iniciar la UI: %v", err)
 	}

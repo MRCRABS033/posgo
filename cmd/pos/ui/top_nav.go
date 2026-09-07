@@ -19,11 +19,11 @@ func (m MainModel) renderTopNav() string {
 	Tab1 := inactiveStyle.Render("Clientes")
 	f3Tab := inactiveStyle.Render("[F3] Producto")
 	f4Tab := inactiveStyle.Render("[F4] Inventario")
-	//Tab2 := inactiveStyle.Render("Compras")
-	//Tab3 := inactiveStyle.Render("Configuracion")
-	//Tab4 := inactiveStyle.Render("Facturas")
-	//Tab5 := inactiveStyle.Render("Corte")
-	//Tab6 := inactiveStyle.Render("Reportes")
+	Tab2 := inactiveStyle.Render("Compras")
+	Tab3 := inactiveStyle.Render("Configuracion")
+	Tab4 := inactiveStyle.Render("Facturas")
+	Tab5 := inactiveStyle.Render("Corte")
+	Tab6 := inactiveStyle.Render("Reportes")
 	switch m.activeTab {
 	case 0:
 		f1Tab = activeStile.Render("[F1] Ventas")
@@ -35,15 +35,30 @@ func (m MainModel) renderTopNav() string {
 		f4Tab = activeStile.Render("[F4] Inventario")
 	case 4:
 		Tab1 = activeStile.Render("Clientes")
+	case 5:
+		Tab2 = activeStile.Render("Compras")
+	case 6:
+		Tab3 = activeStile.Render("Configuracion")
+	case 7:
+		Tab4 = activeStile.Render("Facturas")
+	case 8:
+		Tab5 = activeStile.Render("Corte")
+	case 9:
+		Tab6 = activeStile.Render("Reportes")
 
 	}
 
-	navBar := lipgloss.JoinHorizontal(lipgloss.Top, f1Tab, " ", Tab1, " ", f2Tab, " ", f3Tab, " ", f4Tab)
+	navBar := lipgloss.JoinHorizontal(lipgloss.Top, f1Tab, " ", Tab1, " ", f2Tab, " ", f3Tab, " ", f4Tab, " ", Tab2, " ", Tab3, " ", Tab4, " ", Tab5, " ", Tab6)
+
+	width := m.width
+	if width <= 0 {
+		width = 80
+	}
 
 	barStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		BorderForeground(lipgloss.Color("240")).
-		Width(80)
+		Width(width)
 
 	return barStyle.Render(navBar)
 }
